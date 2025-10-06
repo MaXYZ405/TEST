@@ -1,0 +1,35 @@
+<button id="setDog">Inserir token no cookie</button>
+<button id="delDog">Remover cookie</button>
+<pre id="dbg" style="background:#111;color:#0f0;padding:8px;margin-top:8px;"></pre>
+
+<script>
+(function(){
+  const dbg = id => document.getElementById('dbg').textContent = id;
+  document.getElementById('setDog').addEventListener('click', () => {
+    const t = prompt('Token (apenas para testes):');
+    if (!t) { dbg('Operação cancelada.'); return; }
+    // validação simples: comprimento e carateres
+    if (t.length < 8) { dbg('Token muito curto.'); return; }
+    const value = encodeURIComponent(t).replace(/%3B/g,''); // remove ;
+    const expires = new Date(Date.now() + 2436001000).toUTCString(); // ~28 dias
+    // Para produção preferir que o servidor defina HttpOnly
+    try {
+      document.cookie = '.DOGSECURITY=' + value +
+        '; Domain=.pekora.zip; Path=/; SameSite=None; Secure; Expires=' + expires;
+      dbg('Cookie definido. document.cookie: ' + document.cookie);
+      alert('Tentativa enviada — cookie definido.');
+      location.reload();
+    } catch (e) {
+      dbg('Erro a definir cookie: ' + e.message);
+    }
+  });
+
+  document.getElementById('delDog').addEventListener('click', () => {
+    // expirar cookie
+    document.cookie = '.DOGSECURITY=; Domain=.pekora.zip; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure';
+    dbg('Cookie removido. document.cookie: ' + document.cookie);
+    alert('Cookie removido (tentativa).');
+    location.reload();
+  });
+})();
+</script>
