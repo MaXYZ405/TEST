@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Console Local</title>
+<style>
+body{font-family:monospace;margin:8px;background:#111;color:#0f0}
+#out{height:300px;border:1px solid #0b74da;padding:8px;overflow:auto;background:#111;color:#0f0}
+input{width:100%;padding:8px;box-sizing:border-box;margin-top:6px;background:#222;color:#0f0;border:1px solid #0b74da}
+</style>
+</head>
+<body>
+<h3>Console Local</h3>
+<div id="out"></div>
+<input id="in" placeholder="Digite JS e pressione Enter">
+<script>
+const out=document.getElementById('out'), inp=document.getElementById('in');
+function log(...a){
+  const d=document.createElement('div');
+  d.textContent=a.map(x=>typeof x==='object'?JSON.stringify(x,null,2):String(x)).join(' ');
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+inp.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    const code=inp.value; 
+    inp.value='';
+    try{
+      const r=eval(code);
+      log('> '+code);
+      if(r!==undefined) log(r);
+    }catch(err){
+      log('Erro: '+err.message);
+    }
+  }
+});
+</script>
+</body>
+</html>
