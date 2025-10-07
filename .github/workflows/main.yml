@@ -7,9 +7,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
     - name: Download ngrok
       run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
       shell: powershell
@@ -49,65 +46,6 @@ jobs:
       run: Expand-Archive pekora.zip -DestinationPath PekoraLauncher
       shell: powershell
 
-    # Removed the step that tried to run the Pekora .exe
-    # GitHub runners cannot run GUI executables, only download/extract them
-
-    - name: Start ngrok tunnel in background (TCP 3389)
-      run: |
-        $ngrokPath = Join-Path $PWD 'ngrok\ngrok.exe'
-        if (-Not (Test-Path $ngrokPath)) {
-          Write-Error "ngrok not found at $ngrokPath"
-          exit 1
-        }
-        Start-Process -FilePath $ngrokPath -ArgumentList "tcp 3389" -WindowStyle Hidden
-        Write-Host "ngrok started in background."
-      shell: powershell
-
-    - name: Wait for ngrok API and print public address (host:port)
-      run: |
-        $api = 'http://127.0.0.1:4040/api/tunnels'
-        $maxAttempts = 30
-        $attempt = 0
-        $tunnel = $null
-
-        while ($attempt -lt $maxAttempts -and $null -eq $tunnel) {
-          try {
-            Start-Sleep -Seconds 2
-            $resp = Invoke-RestMethod -Uri $api -UseBasicParsing -ErrorAction Stop
-            if ($resp -and $resp.tunnels) {
-              foreach ($t in $resp.tunnels) {
-                if ($t.public_url -and $t.public_url -match '^tcp://') {
-                  $tunnel = $t
-                  break
-                }
-              }
-            }
-          } catch {}
-          $attempt++
-        }
-
-        if ($null -eq $tunnel) {
-          Write-Error "Could not get ngrok tunnel via API at $api (attempts: $attempt)."
-          exit 1
-        }
-
-        $public = $tunnel.public_url
-        Write-Host "ngrok public_url: $public"
-
-        $noProto = $public -replace '^tcp://',''
-        $parts = $noProto.Split(':')
-        $host = $parts[0]
-        $port = $parts[1]
-        $rdpAddress = "$host`:$port"
-
-        Write-Host " === RDP ADDRESS (use this to connect via RDP) ==="
-        Write-Host $rdpAddress
-        Write-Host " ================================================"
-
-        Write-Output ("::set-output name=rdp_address::" + $rdpAddress)
-      shell: powershell
-
-    - name: Show RDP address in logs
-      run: |
-        Write-Host "RDP address already printed above — look for 'RDP ADDRESS' in the logs."
+    - name: Create ngrok Tunnel (TCP 3389)
+      run: .\ngrok\ngrok.exe tcp 3389
       shell: powershell
