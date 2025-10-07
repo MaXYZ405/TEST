@@ -55,12 +55,12 @@ jobs:
         # Find an exe inside the extracted folder and try to run it
         $exe = Get-ChildItem -Path PekoraLauncher -Recurse -Filter *.exe | Select-Object -First 1
         if ($null -eq $exe) {
-          Write-Error "No .exe found inside PekoraLauncher — check the zip contents."
+           Write-Error "No .exe found inside PekoraLauncher — check the zip contents."
           exit 1
         }
         Write-Host "Found: $($exe.FullName) - attempting to run."
-        # If the app supports silent mode, you can add arguments like '/S' below
         Start-Process -FilePath $exe.FullName -ArgumentList "" -NoNewWindow -PassThru
+
         # Note: some launchers require UI or manual installation — adjust as needed
       shell: powershell
 
