@@ -7,18 +7,18 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Download ngrok
-      run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+    - name: Download Pekora
+      run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile pekora.zip
       shell: powershell
 
-    - name: Extract ngrok
-      run: Expand-Archive ngrok.zip -DestinationPath ngrok
+    - name: Extract Pekora
+      run: Expand-Archive pekora.zip -DestinationPath Pekora
       shell: powershell
 
-    - name: Authenticate ngrok
-      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+    - name: Authenticate Pekora
+      run: .\Pekora\ngrok.exe authtoken $Env:PEKORA_AUTH
       env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        PEKORA_AUTH: ${{ secrets.PEKORA_AUTH }}
       shell: powershell
 
     - name: Enable RDP (Terminal Services) and firewall
@@ -39,13 +39,13 @@ jobs:
       shell: powershell
 
     - name: Download Pekora Launcher
-      run: Invoke-WebRequest -Uri https://github.com/KoroneX/Korone-Bootstrapper/releases/download/v1.7.0.3/PekoraPlayerLauncher-x64.zip -OutFile pekora.zip
+      run: Invoke-WebRequest -Uri https://github.com/KoroneX/Korone-Bootstrapper/releases/download/v1.7.0.3/PekoraPlayerLauncher-x64.zip -OutFile PekoraLauncher.zip
       shell: powershell
 
     - name: Extract Pekora Launcher
-      run: Expand-Archive pekora.zip -DestinationPath PekoraLauncher
+      run: Expand-Archive PekoraLauncher.zip -DestinationPath PekoraLauncher
       shell: powershell
 
-    - name: Create ngrok Tunnel (TCP 3389)
-      run: .\ngrok\ngrok.exe tcp 3389
+    - name: Create Pekora Tunnel (TCP 3389)
+      run: .\Pekora\ngrok.exe tcp 3389
       shell: powershell
