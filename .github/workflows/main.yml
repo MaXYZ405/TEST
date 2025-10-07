@@ -33,7 +33,6 @@ jobs:
 
     - name: Ensure runner user exists and set password
       run: |
-        # Create or update user runneradmin with password
         if (Get-LocalUser -Name "runneradmin" -ErrorAction SilentlyContinue) {
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
         } else {
@@ -50,29 +49,16 @@ jobs:
       run: Expand-Archive pekora.zip -DestinationPath PekoraLauncher
       shell: powershell
 
-    - name: Install / Start Pekora Launcher
-      run: |
-        # Find an exe inside the extracted folder and try to run it
-        $exe = Get-ChildItem -Path PekoraLauncher -Recurse -Filter *.exe | Select-Object -First 1
-        if ($null -eq $exe) {
-           Write-Error "No .exe found inside PekoraLauncher — check the zip contents."
-          exit 1
-        }
-        Write-Host "Found: $($exe.FullName) - attempting to run."
-        Start-Process -FilePath $exe.FullName -ArgumentList "" -NoNewWindow -PassThru
-
-        # Note: some launchers require UI or manual installation — adjust as needed
-      shell: powershell
+    # Removed the step that tried to run the Pekora .exe
+    # GitHub runners cannot run GUI executables, only download/extract them
 
     - name: Start ngrok tunnel in background (TCP 3389)
       run: |
-        # Start ngrok in background for port 3389
         $ngrokPath = Join-Path $PWD 'ngrok\ngrok.exe'
         if (-Not (Test-Path $ngrokPath)) {
           Write-Error "ngrok not found at $ngrokPath"
           exit 1
         }
-        # Start ngrok in background
         Start-Process -FilePath $ngrokPath -ArgumentList "tcp 3389" -WindowStyle Hidden
         Write-Host "ngrok started in background."
       shell: powershell
@@ -88,7 +74,6 @@ jobs:
           try {
             Start-Sleep -Seconds 2
             $resp = Invoke-RestMethod -Uri $api -UseBasicParsing -ErrorAction Stop
-            # ngrok v3 may return a "tunnels" array; we look for a tcp tunnel
             if ($resp -and $resp.tunnels) {
               foreach ($t in $resp.tunnels) {
                 if ($t.public_url -and $t.public_url -match '^tcp://') {
@@ -97,9 +82,7 @@ jobs:
                 }
               }
             }
-          } catch {
-            # not ready yet
-          }
+          } catch {}
           $attempt++
         }
 
@@ -108,23 +91,19 @@ jobs:
           exit 1
         }
 
-        # public_url example: tcp://0.tcp.ngrok.io:12345
         $public = $tunnel.public_url
         Write-Host "ngrok public_url: $public"
 
-        # extract host and port
         $noProto = $public -replace '^tcp://',''
         $parts = $noProto.Split(':')
         $host = $parts[0]
         $port = $parts[1]
         $rdpAddress = "$host`:$port"
 
-        # print clearly for users
         Write-Host " === RDP ADDRESS (use this to connect via RDP) ==="
         Write-Host $rdpAddress
         Write-Host " ================================================"
 
-        # export as step output if needed in later steps
         Write-Output ("::set-output name=rdp_address::" + $rdpAddress)
       shell: powershell
 
